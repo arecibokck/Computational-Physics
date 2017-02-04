@@ -36,7 +36,7 @@ def init_spin_config(opt):
 
 if __name__=="__main__":
 
-    l = 15 #Lattice dimension
+    l = 25 #Lattice dimension
     J = 0.3 #Interaction strength
     T = 2.0 #Temperature - change this from a constant to a variable that decreases over time and you have the Simulated Annealing algorithm
     N = 1000 #Number of iterations of MC step
@@ -46,8 +46,10 @@ if __name__=="__main__":
 
     #Simulation Vizualization
     fig = plt.figure(figsize=(10, 10), dpi=80)
+    plt.xlim(0,l-1)
+    plt.ylim(0,l-1)
     fig.suptitle("T = %0.1f" % T, fontsize=50)
     X, Y = np.meshgrid(range(l), range(l))
-    mesh = plt.pcolormesh(X, Y, L, cmap = plt.cm.RdBu)
+    mesh = plt.pcolormesh(X, Y, L, cmap = plt.cm.RdBu, vmin=-1, vmax=1)
     a = animation.FuncAnimation(fig, mcstep, frames = N, interval = 1, blit = True)
     plt.show()
