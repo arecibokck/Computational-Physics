@@ -33,10 +33,10 @@ def mcstep(path): #One Markov Chain Monte Carlo Step - Metropolis Algorithm
     if (k_p > path.M-1): k_p = 0
     k_m = k - 1
     if (k_m < 0): k_m = path.M-1
-    v = path.V(x_p) - path.V(path.X[k]) #Potential Action
-    k = (path.K(path.X[k_p]-x_p) + path.K(x_p - path.X[k_m])) - (path.K(path.X[k_p] - path.X[k]) + path.K(path.X[k] - path.X[k_m])) #Kinetic Action
-    S = v + k # Total Action for Harmonic Oscillator
-    if(dS < 0.0 or np.random.uniform(0,1) < np.exp(-dS*path.dT)): #Accept-Reject step
+    Va = path.V(x_p) - path.V(path.X[k]) #Potential Action
+    Ka = (path.K(path.X[k_p]-x_p) + path.K(x_p - path.X[k_m])) - (path.K(path.X[k_p] - path.X[k]) + path.K(path.X[k] - path.X[k_m])) #Kinetic Action
+    S = Va + Ka # Total Action for Harmonic Oscillator
+    if(S < 0.0 or np.random.uniform(0,1) < np.exp(-S*path.dT)): #Accept-Reject step
         x_new = path.X[k] = x_p
     else:
         x_new = path.X[k]
@@ -81,5 +81,7 @@ def PIMC(nsteps,path):
         for j in range(path.M): #Run over the full time = dT*M
             x_new = mcstep(path)
             energy.append(path.E(x_new))
+    print("Rendering Plot...")
     render_plots(path.X,rms,energy)
-    #dump_data(rms,energy)
+#   print("Dumping all data into a CSV file...")
+#   dump_data(rms,energy)

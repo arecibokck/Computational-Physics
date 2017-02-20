@@ -1,4 +1,4 @@
-from QHO_PIMC import *
+from PIMC import *
 
 #Initialize
 M = 100 #Number of time slices
