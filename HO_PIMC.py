@@ -3,18 +3,21 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import csv
 
-class HOPath(object):
+class Path(object):
 
-    def __init__(self,M,T,delta):
+    def __init__(self,M,T,delta,x_max,n_bins):
         #Initialize
         self.M = M #Number of time slices
         self.T = T #Imaginary time period
         self.dT = 1.0*T/M #Time Step
         self.delta = delta #Metropolis step size
+        self.x_max = x_max
+        self.x_min = -x_max
+        self.n_bins = n_bins
 
         #Initialize a position configuration
-        #self.X = (np.random.uniform(size=(1, self.M)).tolist())[0]
-        self.X = np.zeros(self.M, dtype=np.int).tolist()
+        self.X = (np.random.uniform(size=(1, self.M)).tolist())[0] #Hot Start
+        #self.X = np.zeros(self.M, dtype=np.int).tolist() #Cold Start
 
     def V(self,x):
         return 0.5*(x**2) #Potential Energy(PE) with m = 1, f = 1
@@ -45,7 +48,7 @@ def mcstep(path): #One Markov Chain Monte Carlo Step - Metropolis Algorithm
     return x_new #New position as determined by the acceptance probability
 
 
-def render_plots(ensemble_pdf, rms):
+def render_plots(path,ensemble_pdf,rms):
 
     #Scatter plot of RMS values of position
     f = plt.figure(1,figsize=(10, 5), dpi=80)
@@ -64,7 +67,9 @@ def render_plots(ensemble_pdf, rms):
     plt.xlabel('Position')
     plt.ylabel('Probability')
     plt.title(r'$\mathrm{Probability\ Density\ over\ Position}$')
-    plt.axis([-6, 6, 0, 1])
+    #plt.axis([path.x_min, path.x_max, 0, 0.05])
+    #plt.hist(ensemble_pdf, normed=True, bins=100)
+    plt.plot(ensemble_pdf)
     plt.grid(True)
 
     plt.show()
@@ -76,7 +81,7 @@ def render_plots(ensemble_pdf, rms):
 #        a.writerows(data)
 
 
-def HOPIMC(nsteps,path):
+def PIMC(nsteps,path):
 
     #Thermalize
     print("Running Thermalization Steps...")
@@ -88,15 +93,16 @@ def HOPIMC(nsteps,path):
     print("Running Production Steps...")
     rms = []
     energy = []
-    ensemble_pdf =[]
+    ensemble_pdf = [0]*path.n_bins
     for i in range(nsteps): # Run over the full range of steps to obtain energy values that can be worked with
         rms.append(np.sqrt(np.mean(np.square(path.X))))
         for j in range(path.M): #Run over the full time = dT*M
             x_new = mcstep(path)
+            bins = abs(int((x_new - path.x_min)/ (path.x_max - path.x_min) * path.n_bins))
+            if(bins<path.n_bins):ensemble_pdf[bins]+=1
             energy.append(path.E(x_new))
-
     print("Rendering Plots...")
-    render_plots(ensemble_pdf,rms)
+    render_plots(path,ensemble_pdf,rms)
     print("Dumping all data into a CSV file...")
 #   dump_data(ensemble_pdf,rms,energy)
     print("Finished! - All tasks successfully completed!")
