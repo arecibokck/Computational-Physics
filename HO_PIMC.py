@@ -5,19 +5,19 @@ import csv
 
 class Path(object):
 
-    def __init__(self,M,T,delta,x_max,n_bins):
+    def __init__(self,M,T,a,x_max,n_bins):
         #Initialize
         self.M = M #Number of time slices
         self.T = T #Imaginary time period
         self.dT = 1.0*T/M #Time Step
-        self.delta = delta #Metropolis step size
+        self.delta = 2.0*np.sqrt(a) #Metropolis step size calculated from Lattice Spacing a
         self.x_max = x_max
         self.x_min = -x_max
         self.n_bins = n_bins
 
         #Initialize a position configuration
-        self.X = (np.random.uniform(size=(1, self.M)).tolist())[0] #Hot Start
-        #self.X = np.zeros(self.M, dtype=np.int).tolist() #Cold Start
+        #self.X = (np.random.uniform(size=(1, self.M)).tolist())[0] #Hot Start
+        self.X = np.zeros(self.M, dtype=np.int).tolist() #Cold Start
 
     def V(self,x):
         return 0.5*(x**2) #Potential Energy(PE) with m = 1, f = 1
@@ -48,19 +48,19 @@ def mcstep(path): #One Markov Chain Monte Carlo Step - Metropolis Algorithm
     return x_new #New position as determined by the acceptance probability
 
 
-def render_plots(path,ensemble_pdf,rms):
+def render_plots(path,ensemble_pdf,ms):
 
-    #Scatter plot of RMS values of position
+    #Scatter plot of MS values of position
     f = plt.figure(1,figsize=(10, 5), dpi=80)
     f.canvas.set_window_title('Harmonic Oscillator')
     fs = gridspec.GridSpec(1, 2, width_ratios=[1,1])
     plt.subplot(fs[0])
     plt.xlabel('No Of Iterations')
     plt.ylabel(r'$\mathrm{<x^2>}$')
-    plt.title(r'$\mathrm{RMS\ of\ Position}$')
-    plt.axis([0, len(rms), 0,max(rms)])
+    plt.title(r'$\mathrm{MS\ of\ Position}$')
+    plt.axis([0,len(ms),0,max(ms)])
     plt.grid(True)
-    plt.plot(rms)
+    plt.plot(ms)
 
     #Histogram of the probability density
     plt.subplot(fs[1])
@@ -74,35 +74,35 @@ def render_plots(path,ensemble_pdf,rms):
 
     plt.show()
 
-#def dump_data(ensemble_pdf,rms,energy):
+#def dump_data(ensemble_pdf,ms,energy):
 #    with open('PIMC_data.csv', 'w', newline='') as fp:
 #        a = csv.writer(fp, delimiter=',')
-#        data = [final_path, rms, energy]
+#        data = [final_path, ms, energy]
 #        a.writerows(data)
 
 
 def PIMC(nsteps,path):
 
     #Thermalize
-    print("Running Thermalization Steps...")
-    for i in range(nsteps/2): #Run over a few steps for the first time to pass burn-in phase
-        for j in range(path.M): # Run over the full time = dT*M
-            mcstep(path)
+    #print("Running Thermalization Steps...")
+    #for i in range(nsteps/2): #Run over a few steps for the first time to pass burn-in phase
+    #    for j in range(path.M): # Run over the full time = dT*M
+    #        mcstep(path)
 
     #Production Steps
     print("Running Production Steps...")
-    rms = []
+    ms = []
     energy = []
     ensemble_pdf = [0]*path.n_bins
     for i in range(nsteps): # Run over the full range of steps to obtain energy values that can be worked with
-        rms.append(np.sqrt(np.mean(np.square(path.X))))
+        ms.append(np.mean(np.square(path.X)))
         for j in range(path.M): #Run over the full time = dT*M
             x_new = mcstep(path)
             bins = abs(int((x_new - path.x_min)/ (path.x_max - path.x_min) * path.n_bins))
             if(bins<path.n_bins):ensemble_pdf[bins]+=1
             energy.append(path.E(x_new))
     print("Rendering Plots...")
-    render_plots(path,ensemble_pdf,rms)
+    render_plots(path,ensemble_pdf,ms)
     print("Dumping all data into a CSV file...")
-#   dump_data(ensemble_pdf,rms,energy)
+#   dump_data(ensemble_pdf,ms,energy)
     print("Finished! - All tasks successfully completed!")
