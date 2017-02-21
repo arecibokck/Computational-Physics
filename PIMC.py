@@ -64,12 +64,12 @@ def render_plots(path,ensemble_pdf,ms):
 
     #Histogram of the probability density
     plt.subplot(fs[1])
-    plt.xlabel('Position')
+    plt.xlabel('Position in x')
     plt.ylabel('Probability')
     plt.title(r'$\mathrm{Probability\ Density\ over\ Position}$')
     #plt.axis([path.x_min, path.x_max, 0, 0.05])
     #plt.hist(ensemble_pdf, normed=True, bins=100)
-    plt.plot(ensemble_pdf)
+    plt.plot((np.arange(path.x_min,path.x_max, 1.0*(path.x_max-path.x_min)/path.n_bins)).tolist(),ensemble_pdf)
     plt.grid(True)
 
     plt.show()

@@ -1,4 +1,4 @@
-from HO_PIMC import *
+from PIMC import *
 
 
 #Initialize
@@ -11,4 +11,5 @@ n_bins = 100
 
 path = Path(M,T,a,x_max,n_bins)
 
-PIMC(nsteps,path)
+if __name__=='__main__':
+    PIMC(nsteps,path)
