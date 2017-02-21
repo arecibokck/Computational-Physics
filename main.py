@@ -1,11 +1,13 @@
-from PIMC import *
+from HO_PIMC import *
+from AHO_PIMC import *
 
 #Initialize
 M = 100 #Number of time slices
 T = 10 #Imaginary time period
 delta = 1.0 #Metropolis step size
-nsteps = 300  #Number of Monte Carlo steps
+nsteps = 1000  #Number of Monte Carlo steps
 
-path = Path(M,T,delta)
+HOpath = HOPath(M,T,delta)
+AHOpath = AHOPath(M,T,delta)
 
-PIMC(nsteps,path)
+HOPIMC(nsteps,HOpath)
