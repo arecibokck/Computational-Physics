@@ -5,12 +5,13 @@ import csv
 
 class Path(object):
 
-    def __init__(self,M,T,a,x_max,n_bins):
+    def __init__(self,M,T,a,n_steps,x_max,n_bins):
         #Initialize
         self.M = M #Number of time slices
         self.T = T #Imaginary time period
         self.dT = 1.0*T/M #Time Step
         self.delta = 2.0*np.sqrt(a) #Metropolis step size calculated from Lattice Spacing a
+        self.n_steps = n_steps
         self.x_max = x_max
         self.x_min = -x_max
         self.n_bins = n_bins
@@ -69,7 +70,8 @@ def render_plots(path,ensemble_pdf,ms):
     plt.title(r'$\mathrm{Probability\ Density\ over\ Position}$')
     #plt.axis([path.x_min, path.x_max, 0, 0.05])
     #plt.hist(ensemble_pdf, normed=True, bins=100)
-    plt.plot((np.arange(path.x_min,path.x_max, 1.0*(path.x_max-path.x_min)/path.n_bins)).tolist(),ensemble_pdf)
+    plt.plot((np.arange(path.x_min,path.x_max, 1.0*(path.x_max-path.x_min)/path.n_bins)).tolist(),\
+                ensemble_pdf)
     plt.grid(True)
 
     plt.show()
@@ -81,11 +83,11 @@ def render_plots(path,ensemble_pdf,ms):
 #        a.writerows(data)
 
 
-def PIMC(nsteps,path):
+def PIMC(path):
 
     #Thermalize
     #print("Running Thermalization Steps...")
-    #for i in range(nsteps/2): #Run over a few steps for the first time to pass burn-in phase
+    #for i in range(path.n_steps/2): #Run over a few steps for the first time to pass burn-in phase
     #    for j in range(path.M): # Run over the full time = dT*M
     #        mcstep(path)
 
@@ -94,7 +96,7 @@ def PIMC(nsteps,path):
     ms = []
     energy = []
     ensemble_pdf = [0]*path.n_bins
-    for i in range(nsteps): # Run over the full range of steps to obtain energy values that can be worked with
+    for i in range(path.n_steps): # Run over the full range of steps to obtain energy values that can be worked with
         ms.append(np.mean(np.square(path.X)))
         for j in range(path.M): #Run over the full time = dT*M
             x_new = mcstep(path)
