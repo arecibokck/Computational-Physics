@@ -49,12 +49,13 @@ def mcstep(path): #One Markov Chain Monte Carlo Step - Metropolis Algorithm
     return x_new #New position as determined by the acceptance probability
 
 
-def render_plots(path,ensemble_pdf,ms):
+def render_plots(path,normed_pdf,ms):
 
     #Scatter plot of MS values of position
     f = plt.figure(1,figsize=(10, 5), dpi=80)
     f.canvas.set_window_title('Harmonic Oscillator')
     fs = gridspec.GridSpec(1, 2, width_ratios=[1,1])
+    fs.update(wspace = 0.3)
     plt.subplot(fs[0])
     plt.xlabel('No Of Iterations')
     plt.ylabel(r'$\mathrm{<x^2>}$')
@@ -68,19 +69,19 @@ def render_plots(path,ensemble_pdf,ms):
     plt.xlabel('Position in x')
     plt.ylabel('Probability')
     plt.title(r'$\mathrm{Probability\ Density\ over\ Position}$')
-    #plt.axis([path.x_min, path.x_max, 0, 0.05])
-    #plt.hist(ensemble_pdf, normed=True, bins=100)
-    plt.plot((np.arange(path.x_min,path.x_max, 1.0*(path.x_max-path.x_min)/path.n_bins)).tolist(),\
-                ensemble_pdf)
+    x = (np.arange(path.x_min,path.x_max,\
+            1.0*(path.x_max-path.x_min)/path.n_bins)).tolist() #Range of position values between which path was generated
+    y = normed_pdf
+    plt.plot(x,y)
     plt.grid(True)
 
     plt.show()
 
-#def dump_data(ensemble_pdf,ms,energy):
-#    with open('PIMC_data.csv', 'w', newline='') as fp:
-#        a = csv.writer(fp, delimiter=',')
-#        data = [final_path, ms, energy]
-#        a.writerows(data)
+def dump_data(normed_pdf,ms,energy):
+    with open('PIMC_data.csv', 'w') as fp:
+        a = csv.writer(fp, delimiter=',')
+        data = [normed_pdf, ms, energy]
+        a.writerows(data)
 
 
 def PIMC(path):
@@ -103,8 +104,9 @@ def PIMC(path):
             bins = abs(int((x_new - path.x_min)/ (path.x_max - path.x_min) * path.n_bins))
             if(bins<path.n_bins):ensemble_pdf[bins]+=1
             energy.append(path.E(x_new))
+    normed_pdf = [float(i)/sum(ensemble_pdf) for i in ensemble_pdf] #Normalized pdf of the ensemble of paths-sum(ensemble_pdf)=n_steps*M
     print("Rendering Plots...")
-    render_plots(path,ensemble_pdf,ms)
+    render_plots(path,normed_pdf,ms)
     print("Dumping all data into a CSV file...")
-#   dump_data(ensemble_pdf,ms,energy)
+    #dump_data(normed_pdf,ms,energy)
     print("Finished! - All tasks successfully completed!")
