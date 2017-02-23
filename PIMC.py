@@ -5,12 +5,13 @@ import csv
 
 class Path(object):
 
-    def __init__(self,M,T,a,n_steps,x_max,n_bins):
+    def __init__(self,M,T,a,lam,n_steps,x_max,n_bins):
         #Initialize
         self.M = M #Number of time slices
         self.T = T #Imaginary time period
         self.dT = 1.0*T/M #Time Step
         self.delta = 2.0*np.sqrt(a) #Metropolis step size calculated from Lattice Spacing a
+        self.lam = lam
         self.n_steps = n_steps
         self.x_max = x_max
         self.x_min = -x_max
@@ -21,7 +22,8 @@ class Path(object):
         self.X = np.zeros(self.M, dtype=np.int).tolist() #Cold Start
 
     def V(self,x):
-        return 0.5*(x**2) #Potential Energy(PE) with m = 1, f = 1
+        return 0.5*(x**2) + self.lam*(x**4) #Potential Energy(PE) with m = 1, f = 1
+                                            #lam = 0 -> Harmonic Oscillator; lam > 0 -> Anharmonic Oscillator
 
     def K(self,x):
         return 0.5*(x**2) #Kinetic Energy(KE) with m = 1
@@ -53,7 +55,6 @@ def render_plots(path,normed_pdf,ms):
 
     #Scatter plot of MS values of position
     f = plt.figure(1,figsize=(10, 5), dpi=80)
-    f.canvas.set_window_title('Harmonic Oscillator')
     fs = gridspec.GridSpec(1, 2, width_ratios=[1,1])
     fs.update(wspace = 0.3)
     plt.subplot(fs[0])
