@@ -1,15 +1,16 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
+import threading
 import csv
 
 class Path(object):
 
     def __init__(self,M,T,a,char,thermalize,lam,n_steps,x_max,n_bins): #Initialize
-        self.M = M #Number of time slices
-        self.T = T #Imaginary time period
-        self.dT = T/M #Time Step
-        self.delta = 2.0*np.sqrt(a) #Metropolis step size calculated from Lattice Spacing a
+        self.M = M
+        self.T = T
+        self.dT = T/M
+        self.delta = 2.0*np.sqrt(a)
         self.thermalize = thermalize
         self.lam = lam
         self.n_steps = n_steps
@@ -18,8 +19,10 @@ class Path(object):
         self.n_bins = n_bins
 
         if char=='h': #Initialize a position configuration
+            print('Initializing for a hot start...')
             self.X = (np.random.uniform(size=(1, self.M)).tolist())[0] #Hot Start
         elif char=='c':
+            print('Initializing for a cold start...')
             self.X = np.zeros(self.M, dtype=np.int).tolist() #Cold Start
 
     def V(self,x):
@@ -80,7 +83,7 @@ def render_plots(path,normed_pdf,ms):
     plt.show()
 
 def dump_data(normed_pdf,ms,energy):
-    
+
     with open('PIMC_data.csv', 'w') as fp:
         a = csv.writer(fp, delimiter=',')
         data = [normed_pdf, ms, energy]
@@ -108,7 +111,10 @@ def PIMC(path):
             energy.append(path.E(x_new))
     normed_pdf = [float(i)/sum(ensemble_pdf) for i in ensemble_pdf] #Normalized pdf of the ensemble of paths-sum(ensemble_pdf)=n_steps*M
     print("Rendering Plots...")
-    render_plots(path,normed_pdf,ms)
+    thread1 = threading.Thread(target = render_plots, args = (path,normed_pdf,ms))
+    thread1.start()
     print("Dumping all data into a CSV file...")
-    dump_data(normed_pdf,ms,energy)
+    thread2 = threading.Thread(target = dump_data, args = (normed_pdf,ms,energy))
+    thread2.start()
     print("Finished! - All tasks successfully completed!")
+    thread1.join(); thread2.join()
