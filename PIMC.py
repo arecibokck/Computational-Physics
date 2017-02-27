@@ -5,21 +5,22 @@ import csv
 
 class Path(object):
 
-    def __init__(self,M,T,a,lam,n_steps,x_max,n_bins):
-        #Initialize
+    def __init__(self,M,T,a,char,thermalize,lam,n_steps,x_max,n_bins): #Initialize
         self.M = M #Number of time slices
         self.T = T #Imaginary time period
-        self.dT = 1.0*T/M #Time Step
+        self.dT = T/M #Time Step
         self.delta = 2.0*np.sqrt(a) #Metropolis step size calculated from Lattice Spacing a
+        self.thermalize = thermalize
         self.lam = lam
         self.n_steps = n_steps
         self.x_max = x_max
         self.x_min = -x_max
         self.n_bins = n_bins
 
-        #Initialize a position configuration
-        #self.X = (np.random.uniform(size=(1, self.M)).tolist())[0] #Hot Start
-        self.X = np.zeros(self.M, dtype=np.int).tolist() #Cold Start
+        if char=='h': #Initialize a position configuration
+            self.X = (np.random.uniform(size=(1, self.M)).tolist())[0] #Hot Start
+        elif char=='c':
+            self.X = np.zeros(self.M, dtype=np.int).tolist() #Cold Start
 
     def V(self,x):
         return 0.5*(x**2) + self.lam*(x**4) #Potential Energy(PE) with m = 1, f = 1
@@ -40,10 +41,10 @@ def mcstep(path): #One Markov Chain Monte Carlo Step - Metropolis Algorithm
     if (k_p > path.M-1): k_p = 0
     k_m = k - 1
     if (k_m < 0): k_m = path.M-1
-    Va = path.V(x_p) - path.V(path.X[k]) #Potential Action
-    Ka = (path.K(path.X[k_p]-x_p) + path.K(x_p - path.X[k_m])) - (path.K(path.X[k_p] - path.X[k]) + path.K(path.X[k] - path.X[k_m])) #Kinetic Action
-    S = Va + Ka # Total Action for Harmonic Oscillator
-    if(S < 0.0 or np.random.uniform(0,1) < np.exp(-S*path.dT)): #Accept-Reject step
+    dVa = path.V(x_p) - path.V(path.X[k]) #Potential Action
+    dKa = (path.K(path.X[k_p]-x_p) + path.K(x_p - path.X[k_m])) - (path.K(path.X[k_p] - path.X[k]) + path.K(path.X[k] - path.X[k_m])) #Kinetic Action
+    dS = dVa + dKa # Total Action for Harmonic Oscillator
+    if(dS < 0.0 or np.random.uniform(0,1) < np.exp(-dS*path.dT)): #Accept-Reject step
         x_new = path.X[k] = x_p
     else:
         x_new = path.X[k]
@@ -53,7 +54,7 @@ def mcstep(path): #One Markov Chain Monte Carlo Step - Metropolis Algorithm
 
 def render_plots(path,normed_pdf,ms):
 
-    #Scatter plot of MS values of position
+    #Plot of MS values of position
     f = plt.figure(1,figsize=(10, 5), dpi=80)
     fs = gridspec.GridSpec(1, 2, width_ratios=[1,1])
     fs.update(wspace = 0.3)
@@ -79,19 +80,19 @@ def render_plots(path,normed_pdf,ms):
     plt.show()
 
 def dump_data(normed_pdf,ms,energy):
+    
     with open('PIMC_data.csv', 'w') as fp:
         a = csv.writer(fp, delimiter=',')
         data = [normed_pdf, ms, energy]
         a.writerows(data)
 
-
 def PIMC(path):
 
-    #Thermalize
-    #print("Running Thermalization Steps...")
-    #for i in range(path.n_steps/2): #Run over a few steps for the first time to pass burn-in phase
-    #    for j in range(path.M): # Run over the full time = dT*M
-    #        mcstep(path)
+    if(path.thermalize): #Thermalize
+        print("Running Thermalization Steps...")
+        for i in range(path.n_steps/2): #Run over a few steps for the first time to pass burn-in phase
+            for j in range(path.M): # Run over the full time = dT*M
+                mcstep(path)
 
     #Production Steps
     print("Running Production Steps...")
@@ -109,5 +110,5 @@ def PIMC(path):
     print("Rendering Plots...")
     render_plots(path,normed_pdf,ms)
     print("Dumping all data into a CSV file...")
-    #dump_data(normed_pdf,ms,energy)
+    dump_data(normed_pdf,ms,energy)
     print("Finished! - All tasks successfully completed!")
