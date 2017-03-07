@@ -26,7 +26,7 @@ class Path(object):
             self.X = np.zeros(self.M, dtype=np.int).tolist() #Cold Start
 
     def V(self,x):
-        return 0.5*(x**2) + self.lam*(x**4) #Potential Energy(PE) with m = 1, f = 1
+        return 0.5*(x**2) + self.lam*((x**2-1.75**2)**2) #Potential Energy(PE) with m = 1, f = 1
                                             #lam = 0 -> Harmonic Oscillator; lam > 0 -> Anharmonic Oscillator
 
     def K(self,x):
