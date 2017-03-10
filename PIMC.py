@@ -1,17 +1,17 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
-import threading
 import csv
 
 class Path(object):
 
-    def __init__(self,M,T,a,mu,f,char,thermalize,lam,n_steps,x_max,n_bins): #Initialize
+    def __init__(self,M,T,delta_x,m,mu,f,char,thermalize,lam,n_steps,x_max,n_bins): #Initialize
+
         self.M = M
         self.T = T
         self.dT = T/M
-        self.a = a
-        self.delta = 2.0*np.sqrt(a)
+        self.delta_x = delta_x
+        self.m = m
         self.mu = mu
         self.f = f
         self.thermalize = thermalize
@@ -34,32 +34,36 @@ class Path(object):
             self.X = np.zeros(self.M, dtype=np.int).tolist() #Cold Start
 
     def V(self,x):
+
         return 0.5*(self.mu**2)*(x**2) + self.lam*((x**2-self.f**2)**2) #Potential Energy(PE)
                                                                         #lam = 0 -> Harmonic Oscillator
                                                                         #lam > 0 -> Anharmonic Oscillator
 
     def DV(self,x):
+
         return (self.mu**2)*x + 4*self.lam*x*(x**2-self.f**2)
 
     def K(self,x):
-        return 0.5*(x**2)*(1/self.a) #Kinetic Energy(KE) with m = 1
+
+        return 0.5*self.m*(x**2)*(1/self.dT**2) #Kinetic Energy(KE) with m = 1
 
     def E(self,x):
+
         return self.V(x) + (0.5*x*self.DV(x)) # Energy from Virial Theorem - V+(0.5*x*dV/dx)
 
 
 def mcstep(path): #One Markov Chain Monte Carlo Step - Metropolis Algorithm
 
     k = int(path.M * np.random.uniform()) #Pick an arbitrary index
-    x_p = path.X[k] + (2 * np.random.uniform() - 1) * path.delta #Pick the position corresponding to arbitrary index and..
-    k_p = k + 1                                                  #..generate new value by adding delta that increases or reduces the value
+    x_p = path.X[k] + np.random.uniform(-path.delta_x,path.delta_x) #Pick the position corresponding to random index and..
+    k_p = k + 1                                                  #..generate new value by adding a small arbitrary change in value, delta_x.
     if (k_p > path.M-1): k_p = 0
     k_m = k - 1
     if (k_m < 0): k_m = path.M-1
     dVa = path.V(x_p) - path.V(path.X[k]) #Potential Action
     dKa = (path.K(path.X[k_p]-x_p) + path.K(x_p - path.X[k_m])) - (path.K(path.X[k_p] - path.X[k]) + path.K(path.X[k] - path.X[k_m])) #Kinetic Action
-    dS = dVa + dKa # Total Action for Harmonic Oscillator
-    if(dS < 0.0 or np.random.normal(0,1) < np.exp(-dS*path.dT)): #Accept-Reject step
+    dS = path.dT*(dVa + dKa) # Total Action for Harmonic Oscillator
+    if(dS < 0.0 or np.random.normal(0,1) < np.exp(-dS)): #Accept-Reject step
         x_new = path.X[k] = x_p
     else:
         x_new = path.X[k]
@@ -79,19 +83,22 @@ def render_plots(path,normed_pdf,ms):
     plt.title(r'$\mathrm{MS\ of\ Position}$')
     plt.axis([0,len(ms),0,max(ms)])
     plt.grid(True)
+    m = [np.mean(ms)]*len(ms)
     plt.plot(ms)
+    plt.hold('on')
+    plt.plot(m)
 
     #Histogram of the probability density
     plt.subplot(fs[1])
     plt.xlabel('Position in x')
     plt.ylabel('Probability')
     plt.title(r'$\mathrm{Probability\ Density\ over\ Position}$')
+    plt.hold('off')
     x = (np.arange(path.x_min,path.x_max,\
             1.0*(path.x_max-path.x_min)/path.n_bins)).tolist() #Range of position values between which path was generated
     y = normed_pdf
     plt.plot(x,y)
     plt.grid(True)
-
     plt.show()
 
 def dump_data(normed_pdf,ms,energy):
@@ -123,10 +130,7 @@ def PIMC(path):
             energy.append(path.E(x_new))
     normed_pdf = [float(i)/sum(ensemble_pdf) for i in ensemble_pdf] #Normalized pdf of the ensemble of paths-sum(ensemble_pdf)=n_steps*M
     print("Rendering Plots...")
-    thread1 = threading.Thread(target = render_plots, args = (path,normed_pdf,ms))
-    thread1.start()
+    render_plots(path,normed_pdf,ms)
     print("Dumping all data into a CSV file...")
-    thread2 = threading.Thread(target = dump_data, args = (normed_pdf,ms,energy))
-    thread2.start()
+    dump_data(normed_pdf,ms,energy)
     print("Finished! - All tasks successfully completed!")
-    thread1.join(); thread2.join()
