@@ -5,7 +5,7 @@ M = 100 #Number of time slices
 T = 10.0 #Imaginary time period
 a = 0.1 #Lattice Spacing
 mu = 1 #Oscillator Frequency?
-f = 1.75 #Arbitrary Constant? for Anharmonic Oscillator
+f = 2.5 #Arbitrary Constant? for Anharmonic Oscillator
 char = 'c' #Choose Hot = 'h' or Cold = 'c' Start
 thermalize = False #Set True to run Thermalization to pass burn-in phase
 lam = 0.0 #Quartic Coupling Constant - lam = 0 -> Harmonic Oscillator; lam > 0 -> Anharmonic Oscillator

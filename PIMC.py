@@ -42,7 +42,7 @@ class Path(object):
         return (self.mu**2)*x + 4*self.lam*x*(x**2-self.f**2)
 
     def K(self,x):
-        return 0.5*(x**2) #Kinetic Energy(KE) with m = 1
+        return 0.5*(x**2)*(1/self.a) #Kinetic Energy(KE) with m = 1
 
     def E(self,x):
         return self.V(x) + (0.5*x*self.DV(x)) # Energy from Virial Theorem - V+(0.5*x*dV/dx)
