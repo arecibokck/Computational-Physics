@@ -6,11 +6,14 @@ import csv
 
 class Path(object):
 
-    def __init__(self,M,T,a,char,thermalize,lam,n_steps,x_max,n_bins): #Initialize
+    def __init__(self,M,T,a,mu,f,char,thermalize,lam,n_steps,x_max,n_bins): #Initialize
         self.M = M
         self.T = T
         self.dT = T/M
+        self.a = a
         self.delta = 2.0*np.sqrt(a)
+        self.mu = mu
+        self.f = f
         self.thermalize = thermalize
         self.lam = lam
         self.n_steps = n_steps
@@ -31,14 +34,18 @@ class Path(object):
             self.X = np.zeros(self.M, dtype=np.int).tolist() #Cold Start
 
     def V(self,x):
-        return 0.5*(x**2) + self.lam*((x**2-1.75**2)**2) #Potential Energy(PE) with m = 1, f = 1
-                                            #lam = 0 -> Harmonic Oscillator; lam > 0 -> Anharmonic Oscillator
+        return 0.5*(self.mu**2)*(x**2) + self.lam*((x**2-self.f**2)**2) #Potential Energy(PE)
+                                                                        #lam = 0 -> Harmonic Oscillator
+                                                                        #lam > 0 -> Anharmonic Oscillator
+
+    def DV(self,x):
+        return (self.mu**2)*x + 4*self.lam*x*(x**2-self.f**2)
 
     def K(self,x):
         return 0.5*(x**2) #Kinetic Energy(KE) with m = 1
 
     def E(self,x):
-        return self.V(x) + self.K(x) # Energy from Virial Theorem - V+(0.5*x*dV/dx) which gives Total Energy = PE + KE
+        return self.V(x) + (0.5*x*self.DV(x)) # Energy from Virial Theorem - V+(0.5*x*dV/dx)
 
 
 def mcstep(path): #One Markov Chain Monte Carlo Step - Metropolis Algorithm
