@@ -18,9 +18,14 @@ class Path(object):
         self.x_min = -x_max
         self.n_bins = n_bins
 
+        if(self.lam==0):
+            print("HARMONIC OSCILLATOR")
+        else:
+            print("ANHARMONIC OSCILLATOR")
+
         if char=='h': #Initialize a position configuration
             print('Initializing for a hot start...')
-            self.X = (np.random.uniform(size=(1, self.M)).tolist())[0] #Hot Start
+            self.X = (np.random.normal(size=(1, self.M)).tolist())[0] #Hot Start
         elif char=='c':
             print('Initializing for a cold start...')
             self.X = np.zeros(self.M, dtype=np.int).tolist() #Cold Start
@@ -47,7 +52,7 @@ def mcstep(path): #One Markov Chain Monte Carlo Step - Metropolis Algorithm
     dVa = path.V(x_p) - path.V(path.X[k]) #Potential Action
     dKa = (path.K(path.X[k_p]-x_p) + path.K(x_p - path.X[k_m])) - (path.K(path.X[k_p] - path.X[k]) + path.K(path.X[k] - path.X[k_m])) #Kinetic Action
     dS = dVa + dKa # Total Action for Harmonic Oscillator
-    if(dS < 0.0 or np.random.uniform(0,1) < np.exp(-dS*path.dT)): #Accept-Reject step
+    if(dS < 0.0 or np.random.normal(0,1) < np.exp(-dS*path.dT)): #Accept-Reject step
         x_new = path.X[k] = x_p
     else:
         x_new = path.X[k]
@@ -103,7 +108,7 @@ def PIMC(path):
     energy = []
     ensemble_pdf = [0]*path.n_bins
     for i in range(path.n_steps): # Run over the full range of steps to obtain energy values that can be worked with
-        ms.append(np.mean(np.square(path.X)))
+        ms.append(np.mean(np.square(path.X))/path.T)
         for j in range(path.M): #Run over the full time = dT*M
             x_new = mcstep(path)
             bins = abs(int((x_new - path.x_min)/ (path.x_max - path.x_min) * path.n_bins))
