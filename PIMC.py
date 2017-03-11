@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.optimize import curve_fit
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import csv
@@ -70,6 +71,8 @@ def mcstep(path): #One Markov Chain Monte Carlo Step - Metropolis Algorithm
 
     return x_new #New position as determined by the acceptance probability
 
+def gaussian(x,mu,sigma,A):
+    return A*np.exp(-(x-mu)**2/2/sigma**2)
 
 def render_plots(path,normed_pdf,ms):
 
@@ -94,11 +97,20 @@ def render_plots(path,normed_pdf,ms):
     plt.ylabel('Probability')
     plt.title(r'$\mathrm{Probability\ Density\ over\ Position}$')
     plt.hold('off')
-    x = (np.arange(path.x_min,path.x_max,\
-            1.0*(path.x_max-path.x_min)/path.n_bins)).tolist() #Range of position values between which path was generated
-    y = normed_pdf
-    plt.plot(x,y)
+    x = np.arange(path.x_min,path.x_max,\
+            1.0*(path.x_max-path.x_min)/path.n_bins) #Range of position values between which path was generated
+    y = np.array(normed_pdf)
+    plt.scatter(x,y,s=5)
+    plt.hold('on')
+    if (path.lam==0):
+        popt, pcov = curve_fit(gaussian, x, y)
+        plt.plot(x, gaussian(x, *popt), 'r-', label='fit')
+    else:
+        plt.plot(x, y, 'r-')
+    plt.hold('off')
     plt.grid(True)
+    plt.ylim((0,(max(y)+0.005)))
+    plt.legend()
     plt.show()
 
 def dump_data(normed_pdf,ms,energy):
