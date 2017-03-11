@@ -6,7 +6,7 @@ T = 10.0 #Imaginary time period
 delta_x = 0.7 #Deflection in position
 m = 1.0 #Mass
 mu = 1 #Oscillator Frequency?
-f = 4 #Arbitrary Constant? for Anharmonic Oscillator
+f = 4.0 #Arbitrary Constant? for Anharmonic Oscillator
 char = 'c' #Choose Hot = 'h' or Cold = 'c' Start
 thermalize = False #Set True to run Thermalization to pass burn-in phase
 lam = 0.0 #Quartic Coupling Constant - lam = 0 -> Harmonic Oscillator; lam > 0 -> Anharmonic Oscillator
