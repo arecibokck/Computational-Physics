@@ -1,5 +1,5 @@
 import numpy as np
-from scipy.optimize import curve_fit
+from scipy.stats import gaussian_kde
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import csv
@@ -71,10 +71,7 @@ def mcstep(path): #One Markov Chain Monte Carlo Step - Metropolis Algorithm
 
     return x_new #New position as determined by the acceptance probability
 
-def gaussian(x,mu,sigma,A):
-    return A*np.exp(-(x-mu)**2/2/sigma**2)
-
-def render_plots(path,normed_pdf,ms):
+def render_plots(path, ms, x, pdf):
 
     #Plot of MS values of position
     f = plt.figure(1,figsize=(10, 5), dpi=80)
@@ -89,7 +86,8 @@ def render_plots(path,normed_pdf,ms):
     m = [np.mean(ms)]*len(ms)
     plt.plot(ms)
     plt.hold('on')
-    plt.plot(m)
+    plt.plot(m, label='Mean')
+    plt.legend(prop={'size':10})
 
     #Histogram of the probability density
     plt.subplot(fs[1])
@@ -97,27 +95,16 @@ def render_plots(path,normed_pdf,ms):
     plt.ylabel('Probability')
     plt.title(r'$\mathrm{Probability\ Density\ over\ Position}$')
     plt.hold('off')
-    x = np.linspace(path.x_min, path.x_max, path.n_bins) #Range of position values between which path was generated
-    y = np.array(normed_pdf)
-    plt.scatter(x,y,s=5, label='Sim Data')
-    plt.hold('on')
-    if (path.lam == 0):
-        popt, pcov = curve_fit(gaussian, x, y)
-        plt.plot(x, gaussian(x, *popt), 'r-', label='fit')
-        plt.legend(prop={'size':10})
-    else:
-        plt.plot(x, y, 'r-', label='fit')
-        plt.legend(prop={'size':8})
-    plt.hold('off')
+    plt.plot(x, pdf, 'r-', label='Fit')
     plt.grid(True)
-    plt.ylim((0,(max(y)+0.005)))
+    plt.legend(prop={'size':10})
     plt.show()
 
-def dump_data(normed_pdf,ms,energy):
+def dump_data(pdf,ms,energy):
 
     with open('PIMC_data.csv', 'w') as fp:
         a = csv.writer(fp, delimiter=',')
-        data = [normed_pdf, ms, energy]
+        data = [pdf, ms, energy]
         a.writerows(data)
 
 def PIMC(path):
@@ -140,9 +127,17 @@ def PIMC(path):
             bins = abs(int((x_new - path.x_min)/ (path.x_max - path.x_min) * path.n_bins))
             if(bins<path.n_bins):ensemble_pdf[bins]+=1
             energy.append(path.E(x_new))
-    normed_pdf = [float(i)/sum(ensemble_pdf) for i in ensemble_pdf] #Normalized pdf of the ensemble of paths-sum(ensemble_pdf)=n_steps*M
     print("Rendering Plots...")
-    render_plots(path,normed_pdf,ms)
+    x = (np.arange(path.x_min,path.x_max,(path.x_max-path.x_min)/path.n_bins)).tolist()
+    a = []
+    for i in range(len(ensemble_pdf)):
+        a.append([x[i]]*ensemble_pdf[i])
+    y = np.array([j for i in a for j in i])
+    kde = gaussian_kde(y, bw_method=0.2 / y.std(ddof=1))
+    kde.covariance_factor = lambda : .25
+    kde._compute_covariance()
+    pdf = kde.evaluate(x)
+    render_plots(path, ms, x, pdf) #Normalized pdf of the ensemble of paths
     print("Dumping all data into a CSV file...")
-    dump_data(normed_pdf,ms,energy)
+    dump_data(pdf, ms, energy)
     print("Finished! - All tasks successfully completed!")
