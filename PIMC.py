@@ -83,7 +83,7 @@ def render_plots(path,normed_pdf,ms):
     plt.subplot(fs[0])
     plt.xlabel('No Of Iterations')
     plt.ylabel(r'$\mathrm{<x^2>}$')
-    plt.title(r'$\mathrm{MS\ of\ Position}$')
+    plt.title(r'$\mathrm{Mean\ Square\ of\ Position}$')
     plt.axis([0,len(ms),0,max(ms)])
     plt.grid(True)
     m = [np.mean(ms)]*len(ms)
@@ -97,20 +97,20 @@ def render_plots(path,normed_pdf,ms):
     plt.ylabel('Probability')
     plt.title(r'$\mathrm{Probability\ Density\ over\ Position}$')
     plt.hold('off')
-    x = np.arange(path.x_min,path.x_max,\
-            1.0*(path.x_max-path.x_min)/path.n_bins) #Range of position values between which path was generated
+    x = np.linspace(path.x_min, path.x_max, path.n_bins) #Range of position values between which path was generated
     y = np.array(normed_pdf)
-    plt.scatter(x,y,s=5)
+    plt.scatter(x,y,s=5, label='Sim Data')
     plt.hold('on')
-    if (path.lam==0):
+    if (path.lam == 0):
         popt, pcov = curve_fit(gaussian, x, y)
         plt.plot(x, gaussian(x, *popt), 'r-', label='fit')
+        plt.legend(prop={'size':10})
     else:
-        plt.plot(x, y, 'r-')
+        plt.plot(x, y, 'r-', label='fit')
+        plt.legend(prop={'size':8})
     plt.hold('off')
     plt.grid(True)
     plt.ylim((0,(max(y)+0.005)))
-    plt.legend()
     plt.show()
 
 def dump_data(normed_pdf,ms,energy):
