@@ -71,7 +71,7 @@ def mcstep(path): #One Markov Chain Monte Carlo Step - Metropolis Algorithm
 
     return x_new #New position as determined by the acceptance probability
 
-def render_plots(path, ms, x, pdf):
+def render_plots(ms, x, pdf):
 
     #Plot of MS values of position
     f = plt.figure(1,figsize=(10, 5), dpi=80)
@@ -95,7 +95,7 @@ def render_plots(path, ms, x, pdf):
     plt.ylabel('Probability')
     plt.title(r'$\mathrm{Probability\ Density\ over\ Position}$')
     plt.hold('off')
-    plt.plot(x, pdf, 'r-', label='Fit')
+    plt.plot(x, pdf, 'r-', label='Gaussian \n KDE Fit')
     plt.grid(True)
     plt.legend(prop={'size':10})
     plt.show()
@@ -133,11 +133,11 @@ def PIMC(path):
     for i in range(len(ensemble_pdf)):
         a.append([x[i]]*ensemble_pdf[i])
     y = np.array([j for i in a for j in i])
-    kde = gaussian_kde(y, bw_method=0.2 / y.std(ddof=1))
+    kde = gaussian_kde(y, bw_method=0.2 / y.std(ddof=1)) #Kernel Density Estimation to determine PDF
     kde.covariance_factor = lambda : .25
     kde._compute_covariance()
-    pdf = kde.evaluate(x)
-    render_plots(path, ms, x, pdf) #Normalized pdf of the ensemble of paths
+    pdf = kde.evaluate(x) #Normalized pdf of the ensemble of paths
+    render_plots(ms, x, pdf)
     print("Dumping all data into a CSV file...")
     dump_data(pdf, ms, energy)
     print("Finished! - All tasks successfully completed!")
