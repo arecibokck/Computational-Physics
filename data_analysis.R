@@ -20,10 +20,14 @@ for (i in 1:length(msp)) {
   mspvector <- c(mspvector, as.numeric(msp[[i]]))
 }
 
-acorr <- acf(mspvector, 215, plot=F)
+acorr <- acf(mspvector, 200, plot=F)
 
 plot(acorr, main = 'Autocorrelation of mean squared position values', xlab  = 'Monte Carlo Time')
 
 acfdata <- data.frame(lag=acorr$lag, acf=acorr$acf)
+
+acorr.log <- log(acfdata[,2])
+
+plot(acorr.log, main = 'Log autocorrelation of mean squared position values', ylab = 'Log ACF', xlab  = 'Monte Carlo Time')
 
 write.table(acfdata, 'acfdata.txt', sep='\t')

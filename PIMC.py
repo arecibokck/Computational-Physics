@@ -39,7 +39,7 @@ class Path(object):
 
     def K(self,x):
 
-        return 0.5*self.m*(x**2)*(1/self.dT) # Kinetic Energy(KE) with m = 1
+        return 0.5*self.m*(x**2)*(1/self.dT**2) # Kinetic Energy(KE) with m = 1
 
     def E(self,x):
 
