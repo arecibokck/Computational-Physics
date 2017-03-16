@@ -1,5 +1,5 @@
 from PIMC import *
-import subprocess
+from subprocess import check_output
 import csv
 
 #Initialize
@@ -11,7 +11,7 @@ mu = 1 #Oscillator Frequency?
 f = 4.0 #Arbitrary Constant? for Anharmonic Oscillator
 char = 'c' #Choose Hot = 'h' or Cold = 'c' Start
 thermalize = False #Set True to run Thermalization to pass burn-in phase
-lam = 0.0 #Quartic Coupling Constant - lam = 0 -> Harmonic Oscillator; lam > 0 -> Anharmonic Oscillator
+lam = 1.0 #Quartic Coupling Constant - lam = 0 -> Harmonic Oscillator; lam > 0 -> Anharmonic Oscillator
 n_steps = 1000  #Number of Monte Carlo steps
 x_max = 8.0 #Max value corresponding to the last bin
 n_bins = 100 #Number of bins to draw the probability density histogram over
@@ -42,6 +42,6 @@ if __name__=='__main__':
 
     rcall = [cmd, path2script, args]
 
-    output = subprocess.check_output(rcall)
+    output = check_output(rcall)
 
     print("Finished! - All tasks successfully completed!")

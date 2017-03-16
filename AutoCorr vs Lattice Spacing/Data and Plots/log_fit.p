@@ -7,5 +7,5 @@ fit [:] func(x) 'log.dat' via a,b
 
 set border linewidth 1.5
 set terminal pngcairo
-set output 'Fit_log.png'
+set output 'log_fit.png'
 plot 'log.dat' with yerrorbars t 'Data Points', func(x) t 'Fit' 

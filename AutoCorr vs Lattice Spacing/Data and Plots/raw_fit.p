@@ -8,5 +8,5 @@ fit [:] func(x) 'raw.dat' via a,b
 set border linewidth 1.5
 set key right top
 set terminal pngcairo
-set output 'Fit_raw.png'
+set output 'raw_fit.png'
 plot 'raw.dat' with yerrorbars t 'Data Points', func(x) t 'Fit' 

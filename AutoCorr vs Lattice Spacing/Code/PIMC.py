@@ -23,7 +23,7 @@ class Path(object):
         self.n = 0.0
 
         if char=='h': #Initialize a position configuration
-            self.X = (np.random.normal(size=(1, self.M)).tolist())[0] #Hot Start
+            self.X = (np.random.uniform(size=(1, self.M)).tolist())[0] #Hot Start
         elif char=='c':
             self.X = np.zeros(self.M, dtype=np.int).tolist() #Cold Start
 
@@ -57,7 +57,7 @@ def mcstep(path): # One Markov Chain Monte Carlo Step - Metropolis Algorithm
     dVa = path.V(x_p) - path.V(path.X[k]) # Potential Action
     dKa = (path.K(path.X[k_p]-x_p) + path.K(x_p - path.X[k_m])) - (path.K(path.X[k_p] - path.X[k]) + path.K(path.X[k] - path.X[k_m])) #Kinetic Action
     dS = path.dT*(dVa + dKa) # Total Action for Harmonic Oscillator
-    if(dS < 0.0 or np.random.normal(0,1) < np.exp(-dS)): # Accept-Reject step
+    if(dS < 0.0 or np.random.normal() < np.exp(-dS)): # Accept-Reject step
         x_new = path.X[k] = x_p
         path.n+=1
     else:

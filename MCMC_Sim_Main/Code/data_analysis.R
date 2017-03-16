@@ -13,7 +13,7 @@ if (length(args)==0) {
 data <- file(filename, open ='r')
 line1 <- readLines(data)[[1]]
 msp <- as.list(strsplit(line1, ',')[[1]])
-unlist(msp)
+invisible(unlist(msp))
 
 mspvector <- c()
 for (i in 1:length(msp)) {
@@ -35,5 +35,4 @@ cf <- round(coef(fit), 2)
 eq <- paste0("log(acorr) = ", cf[1], ifelse(sign(cf[2])==1, " + ", " - "), abs(cf[2]), " x ")
 mtext(eq, 3, line=-2)
 #lines(predict(loess_fit ), col='red', lwd=2)
-
 # write.table(acfdata, 'acfdata.txt', sep='\t')
