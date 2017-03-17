@@ -1,5 +1,6 @@
 from PIMC import *
 from subprocess import check_output
+from scipy.optimize import curve_fit
 import numpy as np
 import matplotlib.pyplot as plt
 import csv
@@ -40,7 +41,6 @@ if __name__=='__main__':
 		path = Path(M,i,delta,m,mu,f,char,thermalize,lam,n_steps,x_max,n_bins)
 		msp, energy, ap = PIMC(path, plots = False)
 
-		#print("Dumping all data into a CSV file and running data analysis in R...")
 		data_list = [msp,energy.tolist()]
 		with open(filename, "wb") as fi:
 			writer = csv.writer(fi)
@@ -62,18 +62,47 @@ if __name__=='__main__':
 
 			slopes.append("0")
 
-	v=[float(i) for i in slopes]
+	v=np.array([-1.0/float(i) for i in slopes])
 
 	x = np.divide(Trange,float(M))
-	y = [0]*len(v)
-
-	for i in range(0,len(v)):
-		if v[i] != 0: y[i] = -1/v[i]
-		else: y[i] = float('nan')
-
-	plt.scatter(x,y)
+	y = v
+	y[y==0.0] = float('nan')
+	se = [np.std(v)]*len(v)
+	f = plt.figure(1,figsize=(10, 5), dpi=80)
+	fs = gridspec.GridSpec(1, 2, width_ratios=[1,1])
+	fs.update(wspace = 0.3)
+	plt.subplot(fs[0])
+	plt.scatter(x,y, label='Data')
+	plt.errorbar(x,y,yerr=se, linestyle="None")
+	plt.hold('on')
+	idx = np.isfinite(x) & np.isfinite(y)
+	f = lambda z, *p: p[0] * z**p[1]
+	popt, pcov = curve_fit(f, [x[i] for i,j in enumerate(idx) if idx[i]], [y[i] for i,j in enumerate(idx) if idx[i]], [0.01,-0.04])
+	xfine = np.linspace(0.1, max(x), 100)  # define values to plot the function for
+	plt.plot(xfine, f(xfine, *popt), 'r-', label='Fit')
+	plt.legend(prop={'size':10})
 	plt.xlabel("Lattice Spacing")
 	plt.ylabel("Autocorrelation Time")
-	plt.show()
+	plt.title('AC Time vs LS')
+	plt.grid(True)
 
+	lx = np.log(x)
+	ly = np.log(v)
+	se = [np.std(ly)]*len(ly)
+	plt.subplot(fs[1])
+	plt.xlabel("Log(Lattice Spacing)")
+	plt.ylabel("Log(Autocorrelation Time)")
+	plt.title("Log(AC Time) vs Log(LS)")
+	plt.grid(True)
+	plt.legend(prop={'size':10})
+	plt.scatter(lx,ly, label='Data')
+	plt.errorbar(lx,ly,yerr=se, linestyle="None")
+	idx = np.isfinite(x) & np.isfinite(y)
+	f = lambda z, *p: p[0] + z*p[1]
+	popt, pcov = curve_fit(f, [lx[i] for i,j in enumerate(idx) if idx[i]], [ly[i] for i,j in enumerate(idx) if idx[i]], [-1.0,-0.25])
+	xfine = np.linspace(min(lx),0.0, 100)  # define values to plot the function for
+	plt.plot(xfine, f(xfine, *popt), 'r-', label='Fit')
+	plt.legend(prop={'size':10})
+	plt.hold('off')
+	plt.show()
 	print("Finished! - All tasks successfully completed!")

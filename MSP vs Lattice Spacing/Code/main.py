@@ -1,5 +1,6 @@
 from PIMC import *
 from scipy.optimize import curve_fit
+from subprocess import check_output
 import numpy as np
 import matplotlib.pyplot as plt
 import csv
@@ -29,31 +30,39 @@ if __name__=='__main__':
 		print("Running MCMC for the Anharmonic Oscillator with set parameters...")
 		ilename = "PIMC_data_Anharmonic.csv"
 
-	Trange = (np.arange(10,70.0,1)).tolist()
+	Trange = (np.arange(10.0,70.0,1.0)).tolist()
 	means = []
 	ls = np.divide(Trange,float(M))
+	se = []
 
 	for i in Trange:
 
 		path = Path(M,i,delta,m,mu,f,char,thermalize,lam,n_steps,x_max,n_bins)
 		msp, energy, ap = PIMC(path, plots = False)
 		means.append(np.mean(msp))
+		cmd = 'Rscript'
+		path2script = './data_analysis.R'
+		args = " ".join(str(e) for e in msp)
+		rcall = [cmd, path2script, args]
+		output = check_output(rcall)
+		se.append(float(output.split()[1]))
 
 	print("Dumping all data into a CSV file and rendering plots...")
-	data_list = [means]
+	data_list = [ls, means, se]
 	with open(filename, "wb") as fi:
 		writer = csv.writer(fi)
 		writer.writerows(data_list)
 	plt.scatter(ls,means)
+	plt.errorbar(ls,means,yerr=se, linestyle="None")
 	plt.hold('on')
 	f = lambda x, *p: p[0] * x**p[1]
 	popt, pcov = curve_fit(f, ls, means, [0.01,-0.04])
 	xfine = np.linspace(0.1, max(ls), 100)  # define values to plot the function for
-	plt.plot(xfine, f(xfine, *popt), 'r-')
+	plt.plot(xfine, f(xfine, *popt), 'r-', label='Fit')
+	plt.legend(prop={'size':10})
 	plt.xlabel("Lattice Spacing")
 	plt.ylabel(r"$\mathrm{<x^2>}$")
 	plt.ylim(0.0,max(ls))
-	plt.ylim(0.0,0.6)
 	plt.grid(True)
 	plt.hold('off')
 	plt.show()

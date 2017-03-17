@@ -1,5 +1,4 @@
 from PIMC import *
-#from subprocess import check_output
 from scipy.optimize import curve_fit
 import numpy as np
 import matplotlib.pyplot as plt
