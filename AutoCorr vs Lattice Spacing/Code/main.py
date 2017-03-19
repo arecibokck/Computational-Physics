@@ -10,7 +10,7 @@ M = 100 #Number of time slices
 T = 10.0 #Imaginary time period
 delta = 0.7 #Deflection in position
 m = 1.0 #Mass
-mu = 1 #Oscillator Frequency?
+mu = 1.0 #Oscillator Frequency?
 f = 4.0 #Arbitrary Constant? for Anharmonic Oscillator
 char = 'c' #Choose Hot = 'h' or Cold = 'c' Start
 thermalize = False #Set True to run Thermalization to pass burn-in phase
@@ -28,27 +28,24 @@ if __name__=='__main__':
 		filename = "PIMC_data_Harmonic.csv"
 	else:
 		print("Running MCMC for the Anharmonic Oscillator with set parameters...")
-		ilename = "PIMC_data_Anharmonic.csv"
+		filename = "PIMC_data_Anharmonic.csv"
 
 	Trange = (np.arange(10.0,70.0,1.0)).tolist()
-	n = 0
 	slopes = []
 
 	for i in Trange:
 
-		n+=1
-
 		path = Path(M,i,delta,m,mu,f,char,thermalize,lam,n_steps,x_max,n_bins)
 		msp, energy, ap = PIMC(path, plots = False)
 
-		data_list = [msp,energy.tolist()]
+		data_list = [msp]
 		with open(filename, "wb") as fi:
 			writer = csv.writer(fi)
 			writer.writerows(data_list)
 
 		cmd = 'Rscript'
 		path2script = './data_analysis.R'
-		args = [filename, str(n)]
+		args = [filename]
 
 		rcall = [cmd, path2script] + args
 

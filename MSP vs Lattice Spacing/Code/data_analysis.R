@@ -1,7 +1,5 @@
 args = commandArgs(trailingOnly=TRUE)
 
-filename <- ''
-
 if (length(args)==0) {
   stop('One argument must be supplied - (input filename).csv', call.=FALSE)
 } else if (length(args)==1) {
@@ -11,12 +9,10 @@ if (length(args)==0) {
 }
 
 msp <- unlist(strsplit(msp, split=" "))
+
 mspvector <- c()
 for (i in 1:length(msp)) {
-  num <- as.numeric(msp[[i]])
-  if(!is.nan(num)){
-      mspvector <- c(mspvector,num)
-  }
+  mspvector <- c(mspvector, as.numeric(msp[[i]]))
 }
 
 n <- length(mspvector)

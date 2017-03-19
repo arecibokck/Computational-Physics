@@ -29,7 +29,7 @@ if __name__=='__main__':
 		print("Running MCMC for the Anharmonic Oscillator with set parameters...")
 		ilename = "PIMC_data_Anharmonic.csv"
 
-	deltarange = (np.arange(0.1,1.0,0.01)).tolist()
+	deltarange = (np.arange(0.0,10.0,0.5)).tolist()
 
 	aps = []
 

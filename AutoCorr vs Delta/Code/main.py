@@ -1,5 +1,4 @@
 from PIMC import *
-from scipy.optimize import curve_fit
 from subprocess import check_output
 import numpy as np
 import matplotlib.pyplot as plt
@@ -10,7 +9,7 @@ M = 100 #Number of time slices
 T = 10.0 #Imaginary time period
 delta = 0.7 #Deflection in position
 m = 1.0 #Mass
-mu = 1 #Oscillator Frequency?
+mu = 1.0 #Oscillator Frequency?
 f = 4.0 #Arbitrary Constant? for Anharmonic Oscillator
 char = 'c' #Choose Hot = 'h' or Cold = 'c' Start
 thermalize = False #Set True to run Thermalization to pass burn-in phase
@@ -21,41 +20,56 @@ n_bins = 100 #Number of bins to draw the probability density histogram over
 
 if __name__=='__main__':
 
+	filename = ""
+
 	if(lam==0):
 		print("Running MCMC for the Harmonic Oscillator with set parameters...")
+		filename = "PIMC_data_Harmonic.csv"
 	else:
 		print("Running MCMC for the Anharmonic Oscillator with set parameters...")
+		filename = "PIMC_data_Anharmonic.csv"
 
-	Trange = (np.arange(10.0,70.0,1.0)).tolist()
-	means = []
-	ls = np.divide(Trange,float(M))
-	se = []
+	deltarange = (np.arange(0.1,50.1,0.5)).tolist()
+	slopes = []
 
-	for i in Trange:
+	for i in deltarange:
 
-		path = Path(M,i,delta,m,mu,f,char,thermalize,lam,n_steps,x_max,n_bins)
+		path = Path(M,T,i,m,mu,f,char,thermalize,lam,n_steps,x_max,n_bins)
 		msp, energy, ap = PIMC(path, plots = False)
-		means.append(np.mean(msp))
+
+		data_list = [msp]
+		with open(filename, "wb") as fi:
+			writer = csv.writer(fi)
+			writer.writerows(data_list)
+
 		cmd = 'Rscript'
 		path2script = './data_analysis.R'
-		args = " ".join(str(e) for e in msp)
-		rcall = [cmd, path2script, args]
-		output = check_output(rcall)
-		se.append(float(output.split()[1]))
+		args = [filename]
 
-	print("Dumping all data into a CSV file and rendering plots...")
-	plt.scatter(ls,means)
-	plt.errorbar(ls,means,yerr=se, linestyle="None")
-	plt.hold('on')
-	f = lambda x, *p: p[0] * x**p[1]
-	popt, pcov = curve_fit(f, ls, means, [0.01,-0.04])
-	xfine = np.linspace(0.1, max(ls), 100)  # define values to plot the function for
-	plt.plot(xfine, f(xfine, *popt), 'r-', label='Fit')
+		rcall = [cmd, path2script] + args
+
+		output = check_output(rcall)
+
+		if output:
+
+		    slopes.append(output.split()[1])
+
+		else:
+
+			slopes.append("0")
+
+	v=np.array([-1.0/float(i) for i in slopes])
+	x = deltarange
+	y = v
+	y[y==0.0] = float('nan')
+	se = [np.std(v)]*len(v)
+	plt.plot(x,y, label='Data')
+	plt.errorbar(x,y,yerr=se, linestyle="None")
 	plt.legend(prop={'size':10})
-	plt.xlabel("Lattice Spacing")
-	plt.ylabel(r"$\mathrm{<x^2>}$")
-	plt.ylim(0.0,max(ls))
+	plt.xlabel(r"$\mathrm{\Delta}$")
+	plt.ylabel("Autocorrelation Time")
+	plt.title('AC Time vs Delta')
 	plt.grid(True)
-	plt.hold('off')
+	plt.xlim(0.0,max(deltarange))
 	plt.show()
 	print("Finished! - All tasks successfully completed!")

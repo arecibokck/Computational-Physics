@@ -7,6 +7,7 @@ line1 <- readLines(data)[[1]]
 msp <- as.list(strsplit(line1, ',')[[1]])
 invisible(unlist(msp))
 
+
 mspvector <- c()
 for (i in 1:length(msp)) {
   mspvector <- c(mspvector, as.numeric(msp[[i]]))
@@ -14,9 +15,10 @@ for (i in 1:length(msp)) {
 
 acorr <- acf(mspvector, length(mspvector), plot=F)
 k <- 1
+
 repeat{
 
-    if(acorr$acf[k] < 0){
+    if(acorr$acf[k] < 0 ){
         break
     }
     k = k+1
